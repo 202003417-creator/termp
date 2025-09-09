@@ -1,0 +1,46 @@
+Timer {
+    Property: +
+        [None]
+        number PlayTime = 0
+        [None]
+        TextComponent[] TimeText = ⬜/ui/DefaultGroup/Timer⬜
+    Method: +
+        @ Client only
+        void OnBeginPlay() {
+            self.PlayTime = 0
+        }
+        @ Client only
+        void OnUpdate(number delta) {
+            self.PlayTime = self.PlayTime + delta
+            self:CheckTime()
+        }
+
+        void CheckTime() {
+            local sec = math.floor(self.PlayTime) --sec는 전체 게임시
+
+            -- 분 단위와 초 단위 분리
+            -- sec을 60으로 나눴을 때 몫이 분 나머지가 초
+
+            if sec < 10 then  -- 10초 미만 단위 계산
+                self.TimeText.Text = "00:0"..tostring(sec)
+            elseif sec < 60 then
+                self.TimeText.Text = "00:"..tostring(sec)
+            elseif csec < 600 then -- 10분 미만 단위 계산
+                local min = math.floor(sec / 60)
+                local csec = sec % 60 -- 분 단위에서 초 단위 다시 계산
+                if csec < 10 then
+                    self.TimeText.Text = "0"..tostring(min)..":0"..tostring(csec)
+                elseif csec < 60 then
+                    self.TimeText.Text = "0"..tostring(min)..":"..tostring(csec)
+                end
+            else -- 10분이 넘어갔을 경우
+                local min = math.floor(sec / 60)
+                local csec = sec % 60
+                if csec < 10 then
+                    self.TimeText.Text = tostring(min)..":0"..tostring(csec)
+                elseif csec < 60 then
+                    self.TimeText.Text = tostring(min)..":"..tostring(csec)
+                end
+            end
+        }
+}
