@@ -1,0 +1,48 @@
+KinematicbodyComponent {
+    Property:
+        Vector2  Acceleration = Vector2(1.000, 1.000) -- 가속도
+        [Sync]
+        boolean  ApplyClimbableRotation = true -- 방향전환
+        [Sync]
+        boolean  EnableJump = true -- 캐릭터의 점프 가능여부 
+        [Sync]
+        boolean  EnableShadow = true
+        [Sync]
+        boolean  EnableTileCollision = true --충돌감지
+        [Sync]
+        float    JumpDrag = 20 -- 점프 감속
+        [Sync]
+        float    JumpSpeed = 6.3 점프 속도 
+        Vector2  MoveVelocity
+        [Sync]
+        Color    ShadowColor = Color(0.300, 0.300, 0.300, 0.800)
+        Vector2  ShadowOffset = Vector2(0.000, 0.000)
+        [Sync]
+        float    ShadowScalingRatio = 0.5
+        Vector2  ShadowSize = Vector2(0.700, 0.300)
+        Vector2  SpeedFactor = Vector2(1.000, 1.000)
+        [Sync]
+        boolean  Enable = true
+        boolean  EnableInHierarchy
+        Entity   Entity
+
+    Method:
+        Vector2  GetGroundPosition()
+        Vector2  GetWorldGroundPosition()
+        boolean  IsOnGround()
+        overridable
+        void     OnEnterRectTile(RectTileEnterEvent enterEvent)
+        overridable
+        void     OnLeaveRectTile(RectTileLeaveEvent leaveEvent)
+        void     SetPosition(Vector2 position)
+        void     SetWorldPosition(Vector2 position)
+        boolean  IsClient()
+        boolean  IsServer()
+
+    Event:
+        KinematicbodyJumpEvent(boolean isJumping = false, KinematicbodyComponent kinematicbody = nil)
+        RectTileCollisionBeginEvent(Entity entity = nil, RectTileMapComponent tileMap = nil, Vector2Int tilePosition = Vector2Int(0, 0), RectTileInfo tileInfo = nil, Vector2 tileHitPosition = Vector2(0, 0)) -- 캐릭터가 타일 충돌을 시작할 때 발생하는 이벤트입니다.
+        RectTileCollisionEndEvent(Entity entity = nil, RectTileMapComponent tileMap = nil, Vector2Int tilePosition = Vector2Int(0, 0), RectTileInfo tileInfo = nil, Vector2 tileHitPosition = Vector2(0, 0)) -- 타일 충돌이 끝날 때 발생하는 이벤트입니다.
+        RectTileEnterEvent(KinematicbodyComponent kinematicbody = nil, RectTileMapComponent tileMap = nil, Vector2Int tilePosition = Vector2Int(0, 0), RectTileInfo tileInfo = nil) --캐릭터가 타일 영역에 진입할 때 발생합니다.
+        RectTileLeaveEvent(KinematicbodyComponent kinematicbody = nil, RectTileMapComponent tileMap = nil, Vector2Int tilePosition = Vector2Int(0, 0), RectTileInfo tileInfo = nil)  -- 캐릭터가 타일 영역을 떠날 때 발생합니다.
+}
