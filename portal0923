@@ -1,43 +1,52 @@
-public class MaplePortalController
-{
-    public PortalComponent portalComponent;       // 포탈 정보
-    public MovementComponent movementComponent;   // 플레이어 이동 컴포넌트
-    public TransformComponent playerTransform;    // 플레이어 위치 정보
-    public Entity playerEntity;                   // 플레이어 엔티티
+MaplePortalController = {}
 
-    void Update()
-    {
-        // 플레이어가 포탈 영역 안에 있고, ↑ 키를 누른 경우
-        if (IsPlayerInPortalArea() && Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            MoveToMap2();
-        }
+-- 생성자 함수: 클래스 인스턴스 생성할 때 호출, 컴포넌트 참조를 초기화한다
+function MaplePortalController:new(portalComponent, movementComponent, playerEntity)
+    local obj = {
+        portalComponent = portalComponent,       -- 포탈 정보 저장
+        movementComponent = movementComponent,   -- 플레이어 이동 제어 컴포넌트 저장
+        playerEntity = playerEntity              -- 플레이어 엔티티 저장
     }
+    setmetatable(obj, self)
+    self.__index = self
+    return obj
+end
 
-    bool IsPlayerInPortalArea()
-    {
-        // 포탈 위치, 크기 기준으로 플레이어 위치를 감지 
-        Vector2 playerPos = new Vector2(playerTransform.Position.x, playerTransform.Position.y);
-        Vector2 portalPos = new Vector2(portalComponent.Entity.Position.x, portalComponent.Entity.Position.y);
 
-        Vector2 min = portalPos + portalComponent.BoxOffset - (portalComponent.BoxSize / 2);
-        Vector2 max = portalPos + portalComponent.BoxOffset + (portalComponent.BoxSize / 2);
+-- 포탈 영역 안에 플레이어가 있는지 체크하는 함수
+function MaplePortalController:IsPlayerInPortalArea()
+    -- 플레이어 현재 위치를 가져옴
+    local playerPos = self.playerEntity.TransformComponent:GetPosition()
+    -- 포탈 위치를 가져옴
+    local portalPos = self.portalComponent.Entity.TransformComponent:GetPosition()
 
-        return (playerPos.x >= min.x && playerPos.x <= max.x) && (playerPos.y >= min.y && playerPos.y <= max.y);
-    }
+    -- 포탈 충돌 박스 최소/최대 좌표 계산
+    local minX = portalPos.x + self.portalComponent.BoxOffset.x - (self.portalComponent.BoxSize.x / 2)
+    local maxX = portalPos.x + self.portalComponent.BoxOffset.x + (self.portalComponent.BoxSize.x / 2)
+    local minY = portalPos.y + self.portalComponent.BoxOffset.y - (self.portalComponent.BoxSize.y / 2)
+    local maxY = portalPos.y + self.portalComponent.BoxOffset.y + (self.portalComponent.BoxSize.y / 2)
 
-    void MoveToMap2()
-    {
-        
-        Entity map2Entity = portalComponent.PortalEntityRef;  //map2로 이동
-        if (map2Entity != null)
-        {
-            TransformComponent map2Transform = map2Entity.GetComponent<TransformComponent>();
-            if (map2Transform != null)
-            {
-                movementComponent.SetPosition(map2Transform.Position);      // 플레이어 위치 이동
-                portalComponent.PortalUseEvent(playerEntity);               // 포탈 사용 이벤트 호출
-            }
-        }
-    }
-}
+    -- 플레이어 위치가 포탈 박스 내에 있으면 true 반환
+    return playerPos.x >= minX and playerPos.x <= maxX and playerPos.y >= minY and playerPos.y <= maxY
+end
+
+
+-- 포탈을 통해 map2로 이동하는 함수
+function MaplePortalController:MoveToMap2()
+    local map2Entity = self.portalComponent.PortalEntityRef
+    if map2Entity then
+        local map2Transform = map2Entity:GetComponent("TransformComponent")
+        if map2Transform then
+            self.movementComponent:SetPosition(map2Transform:GetPosition())
+            self.portalComponent:PortalUseEvent(self.playerEntity)
+        end
+    end
+end
+
+
+function MaplePortalController:Update()
+    -- 플레이어가 포탈 내에 있고, 위 방향키가 눌렸을 때 이동
+    if self.isPlayerInPortalArea and MapleInput.IsKeyPressed("up") then
+        self:MoveToMap2()
+    end
+end
