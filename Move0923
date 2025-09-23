@@ -1,0 +1,30 @@
+function love.update(dt)
+    local direction_x = 0
+    local direction_y = 0
+
+    -- 좌우 방향키 입력
+    if love.keyboard.isDown("left") then
+        direction_x = -1
+    elseif love.keyboard.isDown("right") then
+        direction_x = 1
+    end
+
+    -- 상하 방향키 (필요시 사용가능)
+    if love.keyboard.isDown("up") then
+        direction_y = -1
+    elseif love.keyboard.isDown("down") then
+        direction_y = 1
+    end
+
+    -- 이동 처리
+    player.x = player.x + direction_x * player.speed * dt
+
+    -- 점프 처리 (Alt키 점프)
+    if (love.keyboard.isDown("lalt") or love.keyboard.isDown("ralt")) and player.isGrounded then
+        player.y_velocity = player.jump_force
+        player.isGrounded = false
+    end
+
+    -- 중력 적용
+    player.y_velocity = player.y_velocity + player.gravity * dt
+    player.y = player.y + player.y_velocity * dt
