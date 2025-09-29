@@ -1,0 +1,28 @@
+MovementComponent {
+    Property:
+        [Sync]
+        float   InputSpeed = 1   -- 이동속
+        [Sync]
+        boolean IsClimbPaused = true   --  동작이 정지 상태 확
+        [Sync]
+        float   JumpForce = 0   -- 점프시 적용되는 힘
+        [Sync]
+        boolean Enable = true
+        boolean EnableInHierarchy
+        Entity Entity
+
+    Method:
+        boolean DownJump()  -- 아래 방향으로 점프하는 동작의 성공 여부 반환
+        boolean IsFaceLeft()  -- 왼쪽을 보는가
+        boolean Jump()  -- 점프
+        void MoveToDirection(Vector2 direction, float deltaTime)
+        void SetPosition(Vector2 position)
+        void SetWorldPosition(Vector2 position)  -- 월드 좌표 
+        void Stop()
+        boolean IsClient()
+        boolean IsServer()
+
+    Event:
+        ChangedMovementInputEvent(Vector2 direction = nil)
+        ClimbPauseEvent()
+}
