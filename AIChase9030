@@ -1,0 +1,25 @@
+AIChaseComponent {
+    Property:
+        float   DetectionRange = 5  --추적 감지 범위
+        boolean IsChaseNearPlayer = true
+        EntityRef TargetEntityRef
+        boolean IsLegacy = false
+        boolean LogEnabled = false
+        UpdateAuthorityType UpdateAuthority = UpdateAuthorityType.Server
+        [Sync]
+        boolean Enable = true
+        boolean EnableInHierarchy
+        Entity Entity
+
+    Method:
+        Entity GetCurrentTarget()   -- 현재 타겟 엔티티 반환
+        void SetTarget(Entity targetEntity) -- 추적 대상 엔티티 설정
+        BTNode CreateLeafNode(string nodeName, func<float> -> BehaviourTreeStatus onBehaveFunction)  -- 행동 트리의 리프 노드 생성
+        BTNode CreateNode(string nodeType, string nodeName = nil, func<float> -> BehaviourTreeStatus onBehaveFunction = nil)  -- 행동 트리의 노드 생성
+        void SetRootNode(BTNode node)  -- 행동 트리의 루트 노드 설정
+        boolean IsClient()
+        boolean IsServer()
+
+    Event:
+}
+
