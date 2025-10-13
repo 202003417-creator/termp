@@ -1,0 +1,35 @@
+HitComponent {
+    Property:
+        [Sync]
+        Vector2 BoxOffset = Vector2(0.000, 0.000)
+        [Sync]
+        Vector2 BoxSize
+        [Sync]
+        float CircleRadius = 0
+        string ColliderName
+        [Sync]
+        Vector2 ColliderOffset = Vector2(0.000, 0.000)  -- 충돌 영역 
+        [Sync]
+        ColliderType ColliderType = ColliderType.Box -- 충돌 영역 사각형 
+        [Sync]
+        CollisionGroup CollisionGroup = CollisionGroups.HitBox  -- 충돌영역 히트박스 그룹 지정 
+        boolean IsLegacy = false  -- 레거시 히트박스 사용 여부 
+        [Sync]
+        SyncList<Vector2> PolygonPoints
+        [Sync]
+        boolean Enable = true
+        boolean EnableInHierarchy
+        Entity Entity
+
+    Method:
+        overridable
+        boolean IsHitTarget (string attackInfo)  -- 공격 타겟 판별
+        overridable
+        void OnHit (Entity attacker, integer damage, boolean isCritical, string attackInfo, int32 hitCount ) --충돌시 처리할 내용
+        boolean IsClient( )
+        boolean IsServer( )
+
+    Event:
+        HitEvent(Vector2 attackCenter = Vector2(0, 0), Entity attackerEntity = nil, List<integer> damages = nil, any extra = nil, HitFeedbackAction feedbackAction = 0)
+          -- 공격 판정시 파라미터로 전달
+}
