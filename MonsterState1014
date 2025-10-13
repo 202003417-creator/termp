@@ -1,0 +1,17 @@
+MonsterState {
+    Property:
+        [None]
+        number damage = 100
+
+    Method:
+        Event Handler:
+         self
+        HandleTriggerEnterEvent(TriggerEnterEvent event):
+        {
+            local TriggerBodyEntity = event.TriggerBodyEntity
+
+            if TriggerBodyEntity == _UserService.LocalPlayer and _UserService.LocalPlayer.StateComponent ~= "DEAD" then
+                TriggerBodyEntity.HitComponent:OnHit(self.Entity, self.damage, false, "", 1) --해당 엔티티, 셀프 데미지  노 크리티컬   히트카운트
+            end
+        }
+}
