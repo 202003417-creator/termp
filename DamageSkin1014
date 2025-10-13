@@ -1,0 +1,24 @@
+DamageSkinSettingComponent {
+    Property:
+        [Sync]
+        float Alpha = 1            -- 데미지 스킨의 투명도(1: 완전 불투명, 0: 완전 투명)
+        [Sync]
+        DataRef DamageSkinId = DataRef("6ba67548f43f48f29eb23dafd0766383") -- 표시할 데미지 스킨 종류의 ID
+        [Sync]
+        Vector2 DamageSkinScale = Vector2(1.000, 1.000) 
+        [Sync]
+        float DelayPerAttack = 0.05 -- 공격당 데미지 표시 딜레이
+        [Sync]
+        float PlayRate = 1          -- 데미지 스킨 애니메이션 재생 속도
+        [Sync]
+        DamageSkinTweenType TweenType = DamageSkinTweenType.Default  -- 데미지 숫자의 움직임 효과 타입
+        boolean Enable = true        -- 컴포넌트 활성화 여부
+        boolean EnableInHierarchy    -- 계층 내 활성화 상태
+        Entity Entity               
+
+    Method:
+        boolean IsClient()  
+        boolean IsServer()   
+
+    Event:
+}
