@@ -6,12 +6,12 @@ MonsterState {
     Method:
         Event Handler:
          self
-        HandleTriggerEnterEvent(TriggerEnterEvent event):
+        HandleTriggerEnterEvent(TriggerEnterEvent event):   -- 트리거에 엔터 이벤트가 발생하면 호출 
         {
-            local TriggerBodyEntity = event.TriggerBodyEntity
+            local TriggerBodyEntity = event.TriggerBodyEntity  --  이벤트로부터 트리거된 엔티티를 가져옴
 
-            if TriggerBodyEntity == _UserService.LocalPlayer and _UserService.LocalPlayer.StateComponent ~= "DEAD" then
-                TriggerBodyEntity.HitComponent:OnHit(self.Entity, self.damage, false, "", 1) --해당 엔티티, 셀프 데미지  노 크리티컬   히트카운트
+            if TriggerBodyEntity == _UserService.LocalPlayer and _UserService.LocalPlayer.StateComponent ~= "DEAD" then  -- -- 트리거된 엔티티가 로컬 플레이어이고, 플레이어 상태가 DEAD가 아니면
+                TriggerBodyEntity.HitComponent:OnHit(self.Entity, self.damage, false, "", 1) -- 히트 컴포넌트에 몬스터의 데미지를 전달(크리티컬 없음, 히트 카운트 1)
             end
         }
 }
