@@ -1,0 +1,97 @@
+SpawnMenger = {
+    Property = {
+        Data = {},  -- 몬스터 스폰 데이터를 담을 테이블
+        spawnPosion = "/maps/map02/SpawnManager",  -- 스폰 위치(혹은 관리 엔티티) 경로
+        timer = "/ui/DefaultGroup/Timer",  -- 타이머 엔티티 경로
+        spawnTime = 0,  -- 몬스터 소환 시간(초기값 0)
+        nowId = 1,  -- 현재 스폰 ID(초기값 1)
+        player = nil,  -- 플레이어 엔티티, 아직 할당되지 않음
+        lastId = 0,  -- 마지막 스폰 ID(초기값 0)
+    },
+
+    Method = {
+        -- 'Client only' 메서드로, 맵 진입시 동작
+        void OnMapEnter(Entity enteredMap) {
+            local loadData = _DataService:GetTable("MonsterSpawnData")  -- 몬스터 스폰 데이터 테이블 불러오기
+            for i = 1, loadData:GetRowCount() do
+                local temp = {}
+                temp["id"] = tonumber(loadData:GetCell(i, "id"))  -- id 값 저장 (숫자로 변환)
+                temp["time"] = tonumber(loadData:GetCell(i, "time"))  -- 소환 시간 저장
+                temp["name"] = loadData:GetCell(i, "name")  -- 몬스터 이름 저장
+                temp["modelid"] = loadData:GetCell(i, "modelid")  -- 모델 ID 저장
+                temp["x"] = tonumber(loadData:GetCell(i, "x"))  -- 소환 위치 X좌표
+                temp["y"] = tonumber(loadData:GetCell(i, "y"))  -- 소환 위치 Y좌표
+                temp["pattern"] = tonumber(loadData:GetCell(i, "pattern"))  -- 패턴 값 저장
+                self.Data[temp["id"]] = temp  -- Data 테이블의 id에 temp를 저장
+            end
+        }
+    }
+}
+self.lastId = loadData:GetRowCount()  -- 데이터 테이블 전체 행 수를 lastId에 저장 (마지막 스폰 ID를 의미)
+self.nowId = 1                        -- 현재 스폰 ID를 초기값 1로 설정 (첫 번째 몬스터)
+self.spawnTime = self.Data[self.nowId]["time"]  -- 첫 번째 몬스터의 소환 시간 값을 spawnTime에 저장
+
+void OnBeginPlay() {
+    self.player = _UserService.LocalPlayer  -- 현재 플레이어 객체를 self.player에 저장
+}
+
+
+void OnUpdate(number delta) {
+    if self.nowId > self.lastId then  
+        return                       -- 모든 몬스터 소환이 끝났으면 함수 종료
+    end
+    if self.timer.PlayTime >= self.spawnTime then  -- 타이머가 현재 소환 타이밍을 지났으면
+        self:Spawn()                 -- 몬스터 소환 함수 실행
+    end
+}
+
+void Pattern(string modelid, string name, Vector3 pos, number pattern)
+{
+    -- 보스 소환
+    if pattern == 0 then
+        _SpawnService:SpawnByModelId(modelid, name, pos, self.spawnPosion)  -- 한 위치에 보스 몬스터 소환
+    end
+    
+    if pattern == 1 then
+        -- 양 옆 일렬로 출현
+        for i = 1, 5 do
+            local point = pos + Vector3(20, -2*i, 0)  -- 기준 위치에서 오른쪽으로 움직이면서 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+            point = pos + Vector3(-20, -2*i, 0)      -- 기준 위치에서 왼쪽으로 움직이면서 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+        end
+    end
+    
+    elseif pattern == 2 then
+        for i = 1, 5 do
+            local point = pos + Vector3(-2*i, 20, 0)   -- 기준 위치에서 위쪽(양쪽)으로 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+            point = pos + Vector3(-2*i, -20, 0)       -- 기준 위치에서 아래쪽(양쪽)으로 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+        end
+    end
+    
+    elseif pattern == 3 then
+        for i = 1, 10 do  -- 사각형 소환
+            local point = pos + Vector3(-5*i, 20, 0)   -- 위쪽 일렬로 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+            point = pos + Vector3(-5*i, -20, 0)       -- 아래쪽 일렬로 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+            point = pos + Vector3(20, -5*i, 0)        -- 오른쪽 일렬로 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+            point = pos + Vector3(-20, -5*i, 0)       -- 왼쪽 일렬로 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+        end
+    end
+}
+elseif pattern == 4 then
+    for i = 1, 5 do
+        local point = pos + Vector3(i/2, 0, 0)  -- 기준 위치에서 x축 방향으로 i/2만큼 떨어진 위치에 소환
+        _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+        
+        for j = 1, 4 do
+            local point = pos + Vector3(i/2, j, 0)  -- 기준 위치에서 x축으로 i/2, y축으로 j만큼 떨어진 위치에 추가 소환
+            _SpawnService:SpawnByModelId(modelid, name, point, self.spawnPosion)
+        end
+    end
+end
