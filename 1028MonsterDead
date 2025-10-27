@@ -27,10 +27,10 @@ MonsterState {
     +self.HandleHitEvent(HitEvent event) {
         -- 몬스터가 피격되었을 때 호출되는 이벤트 핸들러
 
-        ---------------- Native Event Sender Info ---------------
-        -- Sender: HitComponent             ; 이벤트를 보낸 컴포넌트
-        -- Space: Server, Client            ; 동작 구역(서버와 클라이언트)
-        --------------------------------------------------------
+        
+        -- Sender: HitComponent             ; 
+        -- Space: Server, Client            ; 
+        
 
         -- 파라미터 정보 추출
         local AttackCenter = event.AttackCenter         -- 공격 중심 좌표(위치)
