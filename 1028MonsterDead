@@ -1,0 +1,52 @@
+MonsterState {
+    -- 몬스터의 상태를 나타내는 클래스/테이블
+
+    Property:
+        -- 기본 속성 선언
+        [None] number damage = 50    -- 몬스터의 기본 공격력
+        [None] number hp = 100       -- 몬스터의 체력(HP)
+        [None] number ThisExp = 10   -- 몬스터 처치시 주는 경험치
+
+    Method:
+    + Event Handler:
+    +self.HandleTriggerEnterEvent(TriggerEnterEvent event) {
+        -- 몬스터가 트리거 영역에 진입한 오브젝트와 충돌했을 때 발생
+
+        local TriggerBodyEntity = event.TriggerBodyEntity   -- 충돌한 엔티티(플레이어 등) 저장
+
+        -- 충돌 엔티티가 플레이어이며, 해당 플레이어가 죽지 않은 상태일 때 실행
+        if TriggerBodyEntity == _UserService.LocalPlayer and _UserService.LocalPlayer.StateComponent ~= "DEAD" then
+            self.damage = math.random(self.damage - 5, self.damage + 5)  
+            -- 공격력에 랜덤 편차(-5~+5) 부여
+
+            TriggerBodyEntity.HitComponent:OnHit(self.Entity, self.damage, false, "", 1)
+            -- 플레이어에게 데미지를 전달하고, OnHit 이벤트를 발생시킴
+        end
+    }
+
+    +self.HandleHitEvent(HitEvent event) {
+        -- 몬스터가 피격되었을 때 호출되는 이벤트 핸들러
+
+        ---------------- Native Event Sender Info ---------------
+        -- Sender: HitComponent             ; 이벤트를 보낸 컴포넌트
+        -- Space: Server, Client            ; 동작 구역(서버와 클라이언트)
+        --------------------------------------------------------
+
+        -- 파라미터 정보 추출
+        local AttackCenter = event.AttackCenter         -- 공격 중심 좌표(위치)
+        local AttackerEntity = event.AttackerEntity     -- 공격자 엔티티 정보
+        local Damages = event.Damages                   -- 데미지 배열 (연속 타격 가능)
+        local Extra = event.Extra                       -- 추가 정보
+        local IsCritical = event.IsCritical             -- 크리티컬 여부
+        local TotalDamage = event.TotalDamage           -- 누적 총 데미지
+
+        for i = 1, #Damages do
+            self.hp = self.hp - Damages[i]  -- 데미지만큼 HP 차감
+            if self.hp <= 0 then            -- HP가 0 이하로 떨어졌으면
+                self.hp = 0                 -- HP를 0으로 고정
+                self.Entity:Destroy(0.1)    -- 0.1초 뒤 몬스터 삭제(사망 처리)
+                break                      -- 반복문 종료(더 이상 처리할 필요 없음)
+            end
+        end
+    }
+}
