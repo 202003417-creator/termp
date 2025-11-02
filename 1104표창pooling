@@ -22,7 +22,7 @@ StarPooling {
     {
         self.time = self.time + delta    -- 델타 시간만큼 누적
 
-        -- spawnTime 초 경과 시마다 새로운 별 생성
+        -- spawnTime 초 경과 시마다 새로운 표창 생성
         if self.time >= self.spawnTime then
             self:Spawn()
             self.time = 0
