@@ -1,0 +1,41 @@
+Arrow {
+    -- Property: 화살의 주요 속성 정의
+    [None]
+    number speed = 0         -- 화살의 이동 속도
+    [None]
+    number damage = 0        -- 화살의 피해량
+    [None]
+    number direction = 0     -- 화살이 이동할 방향(-1 또는 1)
+    [None]
+    number lifeTime = 5      -- 화살이 존재하는 최대 시간(초)
+    [None]
+    number time = 0          -- 현재까지 경과한 시간
+
+    -- Method: 화살 오브젝트의 동작 정의
+    -- client only : 클라이언트에서만 실행
+    void OnUpdate(number delta) -- 매 프레임마다 호출, delta는 프레임 간 경과 시간
+    {
+        -- 화살의 위치를 방향과 속도에 따라 갱신
+        self.Entity.TransformComponent.Position =
+            self.Entity.TransformComponent.Position + Vector3(self.direction, 0, 0) * self.speed
+
+        -- 경과 시간을 누적
+        self.time = self.time + delta
+
+        -- lifeTime을 초과하면 화살 삭제
+        if self.time >= self.lifeTime then
+            self.Entity:Destroy()
+        end
+    }
+
+    -- 화살이 생성/스폰될 때 한 번 호출
+    void OnBeginPlay()
+    {
+        -- direction 값이 0보다 작으면(왼쪽 발사) -1, 아니면(오른쪽 발사) 1로 설정
+        if self.direction < 0 then
+            self.direction = -1
+        else
+            self.direction = 1
+        end
+    }
+}
