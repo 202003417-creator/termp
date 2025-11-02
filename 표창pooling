@@ -1,0 +1,51 @@
+StarPooling {
+    -- Property: 별(Star) 스폰 관련 주요 속성 정의
+    [None]
+    Entity player = nil            -- 
+    [None]
+    number spawnTime = 2           -- 표창 주기(초 단위)
+    [None]
+    number time = 0                -- 경과 시간
+    [None]
+    Entity parent = "/maps/gamemap/Skills" -- 표창 오브젝트가 생성될 부모 엔티티 경로
+
+    -- Function: 동작 및 로직 구현부
+    -- client only: 클라이언트단에서만 동작
+    void OnBeginPlay() 
+    {
+        -- 현재 로컬(본인) 플레이어 객체를 저장
+        self.player = _UserService.LocalPlayer
+    }
+
+    -- 주기적으로 호출되어 표창 생성 타이밍 체크
+    void OnUpdate(number delta)
+    {
+        self.time = self.time + delta    -- 델타 시간만큼 누적
+
+        -- spawnTime 초 경과 시마다 새로운 별 생성
+        if self.time >= self.spawnTime then
+            self:Spawn()
+            self.time = 0
+        end
+    }
+
+    -- 표창을 실제로 생성(스폰)하는 함수
+    void Spawn()
+    {
+        -- parent 엔티티가 nil(없음)이면 경로로부터 엔티티 재설정
+        if self.parent == nil then
+            self.parent = _EntityService:GetEntityByPath("/maps/gamemap/Skills")
+        end
+
+        -- SpawnByModelId로 별 오브젝트 생성, 포지션/부모 지정
+        local star = _SpawnService:SpawnByModelId(
+            "model://e27c15e8-b193-4f13-9c18-2087b1cb0dec", -- 표창 모델 ID
+            "표창",                                          -- 표창 오브젝트 이름
+            self.player.TransformComponent.Position,         -- 표창 생성 위치
+            self.parent                                     -- 부모 엔티티 설정
+        )
+
+        -- 표창의 방향 지정: 플레이어가 바라보는 방향으로 설정
+        star.Star.direction = self.player.PlayerControllerComponent.LookDirectionX
+    }
+}
