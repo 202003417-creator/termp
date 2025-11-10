@@ -1,0 +1,29 @@
+Bomb {
+    
+    Property: 
+        [None]
+        number BombTime = 2      -- 폭탄이 터질 때까지의 시간(초)
+        [None]
+        number Time = 0          -- 현재까지 경과한 시간
+
+    -- 메서드 정의 (클라이언트 전용)
+    Method:
+        @ client only
+        void OnUpdate(number delta) {   -- 매 프레임마다 호출되는 업데이트 함수, delta는 프레임간 경과 시간
+            self.Time = self.Time + delta    -- 경과 시간을 누적함
+
+            if self.Time >= self.BombTime then   -- 누적된 시간이 폭탄 시간 이상이면
+                _EffectService:PlayEffect("5c2a4153dd724ad7b81acdcb1f9068b2",self.Entity,self.Entity.TransformComponent.Position,0,Vector3.one)
+                -- 폭발 이펙트 재생(특정 위치에 이펙트 표시)
+
+                self.Entity.PlayerAttack:AttackFrom(Vector2.one * 3, Vector2(self.Entity.TransformComponent.Position.x, self.Entity.TransformComponent.Position.y),"")
+                -- 폭탄 위치 기준으로 공격(데미지 등 처리)
+
+                self.Entity:Destroy()
+                -- 폭탄 오브젝트 제거
+            end
+        }
+
+    -- 이벤트 핸들러 자리(현재 없음)
+    Event Handler:
+}
