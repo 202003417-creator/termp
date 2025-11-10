@@ -1,0 +1,44 @@
+BombPooling {
+    Property:
+        [None]
+        Entity player = nil       -- 플레이어 Entity 객체 (초기값: nil)
+        [None]
+        number spawnTime = 1     -- 폭탄이 생성될 시간 간격(초)
+        [None]
+        number time = 0          -- 폭탄 생성까지 누적된 시간
+        [None]
+        Entity parent = /maps/map02/Skills  -- 폭탄이 부모 객체로 붙을 위치 Entity(경로)
+
+    Method:
+        [client only]
+        void OnBeginPlay() {
+            self.player = _UserService.LocalPlayer   -- 현재 로컬 플레이어를 얻어옴
+        }
+
+        [client only]
+        void OnUpdate(number delta) {
+            if self.player.CurrentMapName == "stratmap" then  -- 현재 플레이어가 'stratmap' 맵에 있을 경우
+                return       -- 아무 작업도 하지 않고 함수 종료
+            end
+
+            self.time = self.time + delta    -- 누적 시간 갱신
+
+            if self.time >= self.spawnTime then   -- 누적 시간이 생성 간격을 넘었다면
+                self:Spawn()   -- 폭탄 생성 함수 호출
+                self.time = 0  -- 누적 시간 초기화
+            end
+        }
+
+        void Spawn() {
+            if self.parent == nil then  -- 부모 Entity가 지정되지 않은 경우
+                self.parent = _EntityService:GetEntityByPath("/maps/map02/Skills")   -- EntityService에서 경로로 부모 Entity를 얻음
+            end
+
+            _SpawnService:SpawnByModelId(
+                "model://936417f0-735a-4f5a-9a6a-c96314f345ea",   -- 생성할 폭탄 모델 ID
+                "폭",                                               -- 생성되는 Entity의 이름
+                self.player.TransformComponent.Position,             -- 생성 위치(플레이어 위치)
+                self.parent                                         -- 부모 Entity
+            )
+        }
+}
