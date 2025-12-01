@@ -1,0 +1,179 @@
+-- SkillManager 클래스 선언
+SkillManager {
+    -- 스킬 전체 데이터 테이블 선언
+    Property:
+    [None]
+    table allSkillData = {}      -- 모든 스킬 데이터를 저장하는 테이블
+
+    -- 게임 시작 시 호출되는 함수 (클라이언트 전용)
+    Function:
+    void OnBeginPlay() {
+        -- AllSkillData 테이블 불러오기
+        local loadData = _DataService:GetTable("AllSkillData")
+        -- 테이블과 행의 수만큼 반복
+        for i = 1, loadData:GetRowCount() do
+            local temp = {}
+
+            -- 각 열의 값을 temp 테이블에 저장
+            temp["id"] = tonumber(loadData:GetCell(i, "id"))                      -- 스킬 ID값
+            temp["type"] = loadData:GetCell(i, "type")                            -- 스킬 타입
+            temp["name"] = loadData:GetCell(i, "name")                            -- 스킬 이름
+            temp["description"] = loadData:GetCell(i, "description")              -- 스킬 설명
+            temp["modelid"] = loadData:GetCell(i, "modelid")                      -- 모델 ID
+            temp["icon"] = loadData:GetCell(i, "icon")                            -- 아이콘 경로
+
+            -- temp 테이블을 allSkillData에 id값을 키로 하여 저장
+            self.allSkillData[temp["id"]] = temp
+        end
+    }
+    -- Entity Event Handler 구간 (아직 구현 없음)
+}
+-- 스킬 슬롯 초기화 (공격/버프 공통 6칸)
+for i = 1, 6 do
+    local temp = {}
+
+    temp["id"]          = nil  -- 스킬 id
+    temp["type"]        = nil  -- "attack" / "buff" 타입
+    temp["name"]        = nil  -- 스킬 이름
+    temp["description"] = nil  -- 설명
+    temp["modelid"]     = nil  -- 소환할 모델 id
+    temp["icon"]        = nil  -- UI 아이콘 리소스 id
+
+    self.myAttackSkill[i] = temp -- 공격 스킬 슬롯 i 초기값
+    self.myBuffSkill[i]   = temp -- 버프  스킬 슬롯 i 초기값
+end
+
+
+-- 스킬 획득/레벨업 처리
+function GetSkill(skillid)  -- skillid: 얻은 스킬의 id
+    if self.allSkillData[skillid]["type"] == "attack" then
+        -- 공격 스킬 처리
+
+        local slotid = 0   -- 이 스킬을 넣을 슬롯 번호
+        local have   = false -- 이미 보유한 스킬인지 여부
+
+        -- 이미 가진 공격 스킬인지 확인
+        for i = 1, 6 do
+            if self.myAttackSkill[i]["id"] == skillid then
+                have   = true      -- 이미 가진 스킬
+                slotid = i         -- 해당 슬롯번호 저장
+                self:AttackSkillUp(skillid, slotid) -- 스킬 레벨업
+                return             -- 더 볼 필요 없으니 함수 종료
+            end
+        end
+
+        -- 비어 있는 공격 스킬 슬롯 찾기
+        if have == false then
+            for i = 1, 6 do
+                if self.myAttackSkill[i]["id"] == nil then
+                    slotid = i     -- 사용 가능한 빈 슬롯
+                    break
+                end
+            end
+        end
+
+        -- 실제 스킬 오브젝트 생성 (모델 스폰)
+        _SpawnService:SpawnByModelId(
+            self.allSkillData[skillid]["modelid"], -- 소환할 모델 id
+            self.allSkillData[skillid]["name"],    -- 오브젝트 이름
+            Vector3.zero,
+            _UserService.LocalPlayer
+        )
+
+        -- 공격 스킬 슬롯에 정보 넣기 + UI 갱신
+        self:inPutSkill(skillid, slotid)
+    else
+        -- 버프 스킬 처리 (구조는 공격 스킬과 비슷하게 구현 예정)
+        local slotid = 0
+        local have   = false
+        -- TODO: 버프 스킬용 로직 작성
+    end
+end
+
+
+-- 스킬 데이터를 슬롯에 실제로 집어넣는 함수
+function inPutSkill(skillid, slotid)
+    local temp = {}
+
+    -- 전체 스킬 데이터 테이블에서 필요한 정보 복사
+    temp["id"]          = self.allSkillData[skillid]["id"]
+    temp["type"]        = self.allSkillData[skillid]["type"]
+    temp["name"]        = self.allSkillData[skillid]["name"]
+    temp["description"] = self.allSkillData[skillid]["description"]
+    temp["modelid"]     = self.allSkillData[skillid]["modelid"]
+    temp["icon"]        = self.allSkillData[skillid]["icon"]
+
+    if temp["type"] == "attack" then
+        -- 공격 스킬 슬롯에 저장
+        self.myAttackSkill[slotid] = temp
+        self.attackSkillCnt = self.attackSkillCnt + 1 -- 보유 공격 스킬 개수 증가
+
+        -- 공격 스킬 UI 아이콘 세팅
+        self.uiAttackSkill.Children[slotid].SpriteGUIRendererComponent.ImageRUID = temp["icon"]
+        -- 아직 안 배운 단계용 버튼(예: 락 아이콘) 끄기
+        self.uiAttackSkill.Children[slotid].Children[1].Enable = false
+    else
+        -- 버프 스킬 슬롯에 저장
+        self.myBuffSkill[slotid] = temp
+        self.buffSkillCnt = self.buffSkillCnt + 1
+
+        -- 버프 스킬 UI 아이콘 세팅
+        self.uiBuffSkill.Children[slotid].SpriteGUIRendererComponent.ImageRUID = temp["icon"]
+        self.uiBuffSkill.Children[slotid].Children[1].Enable = false
+    end
+end
+
+
+----------------------------------------------------------------
+-- SkillManager 클래스 일부 (프로퍼티 및 데이터 로딩)
+----------------------------------------------------------------
+SkillManager = {
+    -- 전체 스킬 정보 테이블 (id -> 정보)
+    allSkillData = {},
+
+    -- 공격/버프 스킬 슬롯 UI 엔티티
+    uiAttackSkill = nil,
+    uiBuffSkill   = nil,
+
+    -- 현재 보유 중인 공격/버프 스킬 개수
+    attackSkillCnt = 0,
+    buffSkillCnt   = 0,
+
+    -- 실제 슬롯에 들어가는 스킬 정보 배열
+    myAttackSkill = {},
+    myBuffSkill   = {}
+}
+
+-- 게임 시작 시 스킬 데이터 테이블 로드
+function SkillManager:OnBeginPlay()
+    local loadData = _DataService:GetTable("AllSkillData") -- 스킬 데이터 시트
+
+    for i = 1, loadData:GetRowCount() do
+        local temp = {}
+
+        temp["id"]          = tonumber(loadData:GetCell(i, "id"))          -- 스킬 id
+        temp["type"]        = loadData:GetCell(i, "type")                  -- 타입
+        temp["name"]        = loadData:GetCell(i, "name")                  -- 이름
+        temp["description"] = loadData:GetCell(i, "description")           -- 설명
+        temp["modelid"]     = loadData:GetCell(i, "modelid")               -- 모델 id
+        temp["icon"]        = loadData:GetCell(i, "icon")                  -- 아이콘 id
+
+        -- id를 key로 해서 전체 스킬 데이터에 저장
+        self.allSkillData[temp["id"]] = temp
+    end
+end
+
+
+-- 공격 스킬 레벨업 처리
+function AttackSkillUp(skillid, slotid)
+    -- 플레이어 자식 오브젝트(예: 스킬 레벨 보관용 컴포넌트)를 탐색
+    for i = 1, 3 do
+        if _UserService.LocalPlayer.Children[i] ~= nil then
+            print(_UserService.LocalPlayer.Children[i].Name) -- 디버그 출력
+        end
+    end
+
+    -- slotid에 해당하는 스킬 레벨 1 증가
+    _UserService.LocalPlayer.Children[slotid + 2].skillLevel.level =
+        _UserService.LocalPlayer.Children[slotid + 2].skillLevel.level + 1
+end
