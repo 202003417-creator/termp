@@ -24,14 +24,25 @@ LightningPooling = {
                 local x = math.random(-6, 6)    -- X좌표 무작위
                 local y = math.random(-4, 4)    -- Y좌표 무작위
 
-                -- 번개 이펙트 재생
-                _EffectService.PlayEffect("ce772bc9b0c14a68897296b5edec7", self.Entity, self.player.TransformComponent.Position + Vector3(x, y, 0), Vector3.one)
-                -- 번개 공격 처리
-                self.Entity.PlayerAttack:AtAttackFrom(Vector2(self.player.TransformComponent.Position.x + x, self.player.TransformComponent.Position.y + y), "")
-
-                -- 타이머 초기화
-                self.time = 0
-            end
+        if self.time >= (self.spawnTime - (self.Entity.skillLevel.level * 0.1)) then
+    if self.Entity.skillLevel.level >= 3 then
+        -- 두 번 반복
+        for i = 1, 2 do
+            local x = math.random(-6, 6)
+            local y = math.random(-5, 5)
+            _EffectService:PlayEffect("9f58bac772bb4176a05c0961f31d92fa", self.Entity, self.player.TransformComponent.Position + Vector3(x, y, 0), 0, Vector3.one)
+            self.Entity.PlayerAttack:AttackFrom(Vector2.one * 2, Vector2(self.player.TransformComponent.Position.x + x, self.player.TransformComponent.Position.y + y), "")
+        end
+    else
+        local x = math.random(-6, 6)
+        local y = math.random(-5, 5)
+        _EffectService:PlayEffect("9f58bac772bb4176a05c0961f31d92fa", self.Entity, self.player.TransformComponent.Position + Vector3(x, y, 0), 0, Vector3.one)
+        self.Entity.PlayerAttack:AttackFrom(Vector2.one * 2, Vector2(self.player.TransformComponent.Position.x + x, self.player.TransformComponent.Position.y + y), "")
+    end
+    self.time = 0  -- 타이머 초기화
+end
+                
+           
         },
 
         -- 클라이언트 전용 맵 시작 시 호출
