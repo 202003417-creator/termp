@@ -32,17 +32,19 @@ StarPooling {
     -- 표창을 실제로 생성(스폰)하는 함수
     void Spawn()
     {
-        -- parent 엔티티가 nil(없음)이면 경로로부터 엔티티 재설정
         if self.parent == nil then
-            self.parent = _EntityService:GetEntityByPath("/maps/gamemap/Skills")
-        end
+    self.parent = _EntityService:GetEntityByPath("/maps/map02/Skills")
+end
 
-        -- SpawnByModelId로 별 오브젝트 생성, 포지션/부모 지정
-        local star = _SpawnService:SpawnByModelId(
-            "model://e27c15e8-b193-4f13-9c18-2087b1cb0dec", -- 표창 모델 ID
-            "표창",                                          -- 표창 오브젝트 이름
-            self.player.TransformComponent.Position,         -- 표창 생성 위치
-            self.parent                                     -- 부모 엔티티 설정
+if self.Entity.skillLevel.level >= 3 then  -- 여기 코드들은 레벨 3부터 발동
+    local arrow2 = _SpawnService:SpawnByModelId("model://674a4a2a-21a3-483b-81b6-41eb3643764f", "표창", self.player.TransformComponent.Position, self.parent)
+    arrow2.Arrow.direction = self.player.PlayerControllerComponent.LookDirectionX
+    arrow2.Arrow.damage = arrow2.Arrow.damage + (self.Entity.skillLevel.level * 10)
+else
+    local arrow = _SpawnService:SpawnByModelId("model://700e9855-e999-4570-a570-a2beeb6ae31b", "표창", self.player.TransformComponent.Position, self.parent)
+    arrow.Arrow.direction = self.player.PlayerControllerComponent.LookDirectionX
+    arrow.Arrow.damage = arrow.Arrow.damage + (self.Entity.skillLevel.level * 10)
+end                                 
         )
 
         -- 표창의 방향 지정: 플레이어가 바라보는 방향으로 설정
