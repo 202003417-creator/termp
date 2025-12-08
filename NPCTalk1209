@@ -1,0 +1,83 @@
+NPCTalk {
+    Property:
+        [None]
+        number count = 0              -- 현재 몇 번째 대사를 보여주는지 저장하는 변수 (초기값 0)
+        [None]
+        any npcTalkData = nil         -- NPCTalk 테이블 데이터를 담아둘 변수
+        [None]
+        Entity uiNameEntity = nil     -- 이름 텍스트를 표시할 UI 엔티티
+        [None]
+        Entity uiMessageEntity = nil  -- 대사 텍스트를 표시할 UI 엔티티
+        [None]
+        Entity uiTalkPanel = nil      -- 전체 말풍선/대화 패널 UI 엔티티
+        [None]
+        Entity uiPortraitEntity = nil -- 초상화(캐릭터 얼굴)를 표시할 UI 엔티티
+}
+
+
+void OnBeginPlay() 
+{
+    self.count = 1                                   -- 첫 번째 줄 대사부터 시작하도록 인덱스 1로 설정
+    self.npcTalkData = _DataService:GetTable("NPCTalk")  -- NPCTalk 이름의 데이터 테이블을 불러옴
+    self.lastCount = self.npcTalkData:GetRowCount()      -- 테이블에 몇 줄의 대사가 있는지(총 행 수)를 저장해 두기
+
+    -- 대화 UI에 사용할 엔티티들을 경로로 찾아서 변수에 저장
+    self.uiNameEntity     = _EntityService:GetEntityByPath("/ui/UIGroup/TalkPanel/Name")
+    self.uiMessageEntity  = _EntityService:GetEntityByPath("/ui/UIGroup/TalkPanel/Text")
+    self.uiTalkPanel      = _EntityService:GetEntityByPath("/ui/UIGroup/TalkPanel")
+    self.uiPortraitEntity = _EntityService:GetEntityByPath("/ui/UIGroup/TalkPanel/Portrait")
+}
+
+void ShowNextText()
+{
+    -- 현재 count가 마지막 줄을 넘어가면 더 이상 보여줄 대사가 없으므로 패널을 끄고 종료
+    if self.count > self.lastCount then
+        self.uiTalkPanel.Enable = false
+        return
+    end
+
+    local isNameEnable = false        -- 이번 대사에 이름을 표시할지 여부
+    local isPortraitEnable = false    -- 이번 대사에 초상화를 표시할지 여부
+
+    -- 현재 줄(self.count)의 text 셀을 가져와서 대사 내용으로 사용
+    local message = self.npcTalkData:GetCell(self.count, "text")
+
+    -- 대사가 비었거나(nil 또는 빈 문자열)면 패널 끄고 종료
+    if message == nil or message == "" then
+        self.uiTalkPanel.Enable = false
+        return
+    else
+        -- 대사가 있다면 패널을 켜고 텍스트 UI에 내용 적용
+        self.uiTalkPanel.Enable = true
+        self.uiMessageEntity.TextComponent.Text = message
+    end
+
+    -- 같은 줄에서 name, portrait 셀을 읽어옴
+    local name = self.npcTalkData:GetCell(self.count, "name")
+    local portrait = self.npcTalkData:GetCell(self.count, "portrait")
+
+    -- name 필드가 비어있지 않으면 이름을 표시하도록 플래그를 켜고, UI 텍스트에 설정
+    if name ~= nil and name ~= "" then
+        isNameEnable = true
+        self.uiNameEntity.TextComponent.Text = name
+    end
+
+    -- portrait 필드가 비어있지 않으면 초상화를 표시하도록 플래그를 켜고, 이미지 RUID 설정
+    if portrait ~= nil and portrait ~= "" then
+        isPortraitEnable = true
+        self.uiPortraitEntity.SpriteGUIRendererComponent.ImageRUID = portrait
+    end
+
+    -- 이름, 초상화 UI를 실제로 켜거나 끄기
+    self.uiNameEntity.Enable = isNameEnable
+    self.uiPortraitEntity.Enable = isPortraitEnable
+
+    -- 다음에 ShowNextText가 호출되면 다음 줄 대사를 보이도록 인덱스를 1 증가
+    self.count = self.count + 1
+}
+HandleKeyDownEvent (KeyDownEvent event)
+local key = event.key
+
+if key == KeyboardKey.Z then
+    self:ShowNextText()
+end
