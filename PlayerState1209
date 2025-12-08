@@ -1,0 +1,126 @@
+-- PlayerState 스크립트의 프로퍼티 정의 부분
+PlayerState {
+    Property:
+        [None]
+        number NowHP = 1000          -- 현재 HP
+        [None]
+        number MaxHP = 1000          -- 최대 HP
+        [None]
+        number lv = 1                -- 현재 레벨
+        [None]
+        number moveSpeed = 2         -- 이동 속도
+        [None]
+        number skillRange = 1        -- 스킬 범위 배율
+        [None]
+        number skillTime = 1         -- 스킬 지속시간 또는 쿨타임 관련 값
+        [None]
+        number power = 1             -- 공격력 계수
+        [None]
+        boolean recovering = false   -- 무적/회복 상태인지 여부
+        [None]
+        number recoveringTime = 1    -- 무적이 유지될 시간
+        [None]
+        number flowRecoveringTime = 0 -- 경과한 무적 시간(타이머)
+        [None]
+        number nowExp = 0            -- 현재 경험치
+        [None]
+        number maxExp = 90           -- 다음 레벨까지 필요한 경험치
+        [None]
+        table expTable = {300, 320, 350, 400, 550, 600, 650, 1000, 1000, 1000,
+                          1600, 1700, 1800, 1900, 3000, 3200, 3500, 4000, 4500,
+                          6000, 7500, 8000, 8000, 9000, 10000} 
+            -- 레벨별 요구 경험치 테이블 (lv를 인덱스로 사용)
+
+        [None]
+        UITransformComponentRef uiHp  = /ui/Status/UIMyInfo/Hp/img_bar   -- HP 바 이미지
+        [None]
+        UITransformComponentRef uiExp = /ui/Status/UIMyInfo/Exp/img_bar  -- EXP 바 이미지
+        [None]
+        TextComponent textHp   = /ui/Status/UIMyInfo/Hp/text_value       -- HP 숫자 텍스트
+        [None]
+        TextComponent textExp  = /ui/Status/UIMyInfo/Exp/text_value      -- EXP 숫자 텍스트
+        [None]
+        TextComponent textLv   = /ui/Status/UIMyInfo/Lv/text_value       -- 레벨 텍스트
+}
+
+-- 매 프레임마다 호출되는 업데이트 함수
+@client_only
+void OnUpdate(number delta)
+{
+    -- 무적 상태(recovering)가 켜져 있으면 경과 시간을 누적
+    if self.recovering == true then
+        self.flowRecoveringTime = self.flowRecoveringTime + delta
+    end
+
+    -- 누적 시간이 설정된 무적 시간 이상이면 무적 해제
+    if self.flowRecoveringTime >= self.recoveringTime then
+        self.flowRecoveringTime = 0          -- 타이머 리셋
+        self.recovering = false              -- 무적 상태 해제
+        self.Entity.TriggerComponent.Enable = true -- 피격 판정 다시 활성화
+    end
+
+    -- HP, EXP, 레벨 텍스트 갱신
+    self.textHp.Text  = tostring(math.floor(self.NowHP)) .. "/" .. tostring(math.floor(self.MaxHP))
+    self.textExp.Text = tostring(math.floor(self.nowExp)) .. "/" .. tostring(math.floor(self.maxExp))
+    self.textLv.Text  = "LV " .. tostring(math.floor(self.lv))
+
+    -- HP, EXP 게이지 UI 비율 갱신 (가로 길이 550 기준)
+    self.uiHp.RectSize.x  = 550 * (self.NowHP / self.MaxHP)
+    self.uiExp.RectSize.x = 550 * (self.nowExp / self.maxExp)
+
+    -- 현재 경험치가 레벨업에 필요한 경험치 이상일 때 처리
+    while self.nowExp >= self.maxExp do
+        self.nowExp = self.nowExp - self.maxExp  -- 남는 경험치는 다음 레벨로 이월
+        self.lv = self.lv + 1                    -- 레벨 증가
+        GameManager:OpenSkillSelect()            -- 레벨업 시 스킬 선택창 오픈(추정)
+        self.maxExp = self.expTable[self.lv]     -- 새 레벨에 맞는 필요 경험치로 갱신
+    end
+}
+
+-- 레벨업 시 선택한 버프 스킬을 적용하는 함수
+void BuffSkillUp(number skillid)
+{
+    if skillid == 4 then              -- 최대 체력 증가 스킬
+        self.MaxHP = self.MaxHP + 100 -- 최대 HP +100
+        self.NowHP = self.NowHP + 100 -- 현재 HP도 같이 +100 회복
+
+    elseif skillid == 5 then          -- 무적 시간 증가 스킬
+        self.recoveringTime = self.recoveringTime + 0.2  -- 무적 유지시간 +0.2초
+
+    elseif skillid == 6 then          -- 공격력 증가 스킬
+        self.power = self.power + 0.2 -- 공격력 계수 증가
+
+    elseif skillid == 7 then          -- 스킬 쿨타임(또는 지속시간) 증가/감소 스킬
+        self.skillTime = self.skillTime - 0.2  -- 수치
+    elseif	 skillid == 8 then --스킬 범위 증가
+	  self.skillRange = self.skillRange + 0.1
+	
+  	elseif	 skillid == 9 then --이동속도 증가
+  	self.moveSpeed = self.moveSpeed + 0.2
+  	self.Entity.MovementComponent.InputSpeed = self.moveSpeed
+	
+end
+
+HandleHitEvent (HitEvent event)
+{
+ --Parameters
+local AttackCenter = event.AttackCenter
+local AttackerEntity = event.AttackerEntity
+local Damages = event.Damages
+local Extra = event.Extra
+local IsCritical = event.IsCritical
+local TotalDamage = event.TotalDamage
+---------------------------------------------------------
+print("플래이어가 공격당했다")
+
+for i = 1, Damages.Count do
+	self.NowHP = self.NowHP - Damages[1]
+	
+	if self.NowHP <= 0 then
+		self.Entity.StateComponent:ChangeState("DEAD")
+		_GameManager:OpenRevive()
+	end
+end
+
+print("남은 체력 :".. self.NowHP)
+}
